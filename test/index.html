@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>5555</title>
+    <meta charset="utf-8">
+</head>
+
+<body>
+
+    <p>44445333333554</p>
+
+
+
+    <script type="text/javascript">
+        function calcuteExecuteTime(startTime, endTime) {
+            if (!startTime || !endTime || endTime < startTime) {
+                return "00:00:00";
+            } else {
+                var usedTime = endTime - startTime; //两个时间戳相差的毫秒数
+                var days = Math.floor(usedTime / (24 * 3600 * 1000));
+                //计算相差小时数
+                var leftMs1 = usedTime % (24 * 3600 * 1000); //计算天数后剩余的毫秒数
+                var hours = Math.floor(leftMs1 / (3600 * 1000));
+                //计算相差分钟数
+                var leftMs2 = leftMs1 % (3600 * 1000); //计算小时数后剩余的毫秒数
+                var minutes = Math.floor(leftMs2 / (60 * 1000));
+                var leftMs3 = leftMs2 % (60 * 1000); //计算分钟后剩余的毫秒数
+                var seconds = Math.floor(leftMs3 / 1000);
+                var leftMs4 = leftMs3 % 1000; //计算秒后剩余的毫秒数
+                //var time = [days, hours, minutes, seconds, leftMs4];
+                var time = (hours < 10 ? '0' + hours : hours) + ':' + (minutes < 10 ? '0' + minutes : minutes) + ':' + (
+                    seconds < 10 ? '0' + seconds : seconds);
+                console.log(time)
+                return time;
+            }
+
+            calcuteExecuteTime(new Date('2013/04/02 18:00'), new Date('2013/04/02 15/:00'));
+
+
+        }
+    </script>
+</body>
+
+</html>
