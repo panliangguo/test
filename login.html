@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧运营平台 - 登录</title>
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #4c63d2;
+      --secondary: #764ba2;
+      --text-main: #22223b;
+      --text-muted: #6f7287;
+      --border: rgba(102, 126, 234, 0.18);
+      --danger: #ff5c8a;
+      --success: #2dd4bf;
+      --surface: rgba(255, 255, 255, 0.88);
+      --shadow: 0 24px 70px rgba(45, 51, 107, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      font-family: "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at 16% 16%, rgba(255, 255, 255, 0.46), transparent 28%),
+        radial-gradient(circle at 84% 12%, rgba(118, 75, 162, 0.36), transparent 30%),
+        linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    body::before,
+    body::after {
+      position: fixed;
+      width: 420px;
+      height: 420px;
+      content: "";
+      border-radius: 50%;
+      filter: blur(2px);
+      opacity: 0.42;
+      animation: floatGlow 10s ease-in-out infinite;
+    }
+
+    body::before {
+      top: -130px;
+      left: -110px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(102, 126, 234, 0.22));
+    }
+
+    body::after {
+      right: -130px;
+      bottom: -150px;
+      background: linear-gradient(135deg, rgba(118, 75, 162, 0.34), rgba(255, 255, 255, 0.54));
+      animation-delay: -4s;
+    }
+
+    .login-shell {
+      position: relative;
+      z-index: 1;
+      width: min(1080px, calc(100% - 32px));
+      min-height: 640px;
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 32px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+    }
+
+    .brand-panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 56px;
+      overflow: hidden;
+      color: #ffffff;
+      background:
+        linear-gradient(145deg, rgba(102, 126, 234, 0.98), rgba(118, 75, 162, 0.94)),
+        url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.24)' stroke-width='1'%3E%3Cpath d='M0 60H120M60 0V120'/%3E%3Ccircle cx='60' cy='60' r='34'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .brand-panel::after {
+      position: absolute;
+      right: -110px;
+      bottom: -110px;
+      width: 300px;
+      height: 300px;
+      content: "";
+      border: 48px solid rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+    }
+
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .brand-logo__mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.22);
+    }
+
+    .brand-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 440px;
+    }
+
+    .brand-copy__tag {
+      display: inline-flex;
+      margin-bottom: 18px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .brand-copy h1 {
+      margin: 0 0 18px;
+      font-size: clamp(36px, 5vw, 58px);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-copy p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .brand-metrics {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .metric-card {
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.13);
+      backdrop-filter: blur(8px);
+    }
+
+    .metric-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 22px;
+    }
+
+    .metric-card span {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+    }
+
+    .form-panel {
+      display: grid;
+      align-content: center;
+      padding: 56px 50px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78)),
+        radial-gradient(circle at top right, rgba(102, 126, 234, 0.16), transparent 38%);
+    }
+
+    .form-heading {
+      margin-bottom: 34px;
+    }
+
+    .form-heading span {
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+    }
+
+    .form-heading h2 {
+      margin: 10px 0 10px;
+      color: var(--text-main);
+      font-size: 34px;
+      letter-spacing: -0.04em;
+    }
+
+    .form-heading p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 9px;
+      color: #3f415d;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      color: var(--primary);
+      transform: translateY(-50%);
+    }
+
+    .form-input {
+      width: 100%;
+      height: 54px;
+      padding: 0 48px;
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      outline: none;
+      color: var(--text-main);
+      font: inherit;
+      background: rgba(255, 255, 255, 0.86);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: rgba(102, 126, 234, 0.72);
+      box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.13);
+      transform: translateY(-1px);
+    }
+
+    .form-input.is-invalid {
+      border-color: rgba(255, 92, 138, 0.82);
+      box-shadow: 0 0 0 5px rgba(255, 92, 138, 0.12);
+    }
+
+    .password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      border: 0;
+      color: var(--text-muted);
+      font: inherit;
+      cursor: pointer;
+      background: transparent;
+      transform: translateY(-50%);
+    }
+
+    .error-message {
+      min-height: 20px;
+      margin: 7px 4px 0;
+      color: var(--danger);
+      font-size: 12px;
+    }
+
+    .form-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 2px 0 26px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-label input {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--primary);
+    }
+
+    a {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--primary-dark);
+    }
+
+    .submit-btn {
+      width: 100%;
+      height: 56px;
+      border: 0;
+      border-radius: 18px;
+      color: #ffffff;
+      font: inherit;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 18px 34px rgba(102, 126, 234, 0.32);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .submit-btn:hover {
+      box-shadow: 0 22px 42px rgba(102, 126, 234, 0.38);
+      transform: translateY(-2px);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-btn.is-loading {
+      cursor: wait;
+      opacity: 0.82;
+    }
+
+    .form-footer {
+      margin-top: 24px;
+      color: var(--text-muted);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .toast {
+      position: fixed;
+      top: 28px;
+      left: 50%;
+      z-index: 3;
+      min-width: 280px;
+      padding: 14px 18px;
+      border-radius: 16px;
+      color: #ffffff;
+      text-align: center;
+      background: rgba(20, 24, 44, 0.86);
+      box-shadow: 0 16px 44px rgba(20, 24, 44, 0.28);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -16px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @keyframes floatGlow {
+      0%,
+      100% {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+      50% {
+        transform: translate3d(22px, 18px, 0) scale(1.06);
+      }
+    }
+
+    @media (max-width: 860px) {
+      body {
+        overflow: auto;
+        padding: 24px 0;
+      }
+
+      .login-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .brand-panel {
+        min-height: 380px;
+        padding: 36px;
+      }
+
+      .form-panel {
+        padding: 38px 26px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .brand-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .form-options {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-shell" aria-label="智慧运营平台登录页">
+    <section class="brand-panel" aria-label="平台介绍">
+      <div class="brand-logo">
+        <span class="brand-logo__mark" aria-hidden="true">◇</span>
+        <span>SMART OPS</span>
+      </div>
+
+      <div class="brand-copy">
+        <span class="brand-copy__tag">紫色智能运营中台</span>
+        <h1>洞察运营，智启未来</h1>
+        <p>统一监控业务指标、订单履约与客户增长趋势，让运营团队更快发现问题并完成决策闭环。</p>
+      </div>
+
+      <div class="brand-metrics" aria-label="平台能力指标">
+        <div class="metric-card">
+          <strong>98.7%</strong>
+          <span>服务可用性</span>
+        </div>
+        <div class="metric-card">
+          <strong>24h</strong>
+          <span>全天候监控</span>
+        </div>
+        <div class="metric-card">
+          <strong>12k+</strong>
+          <span>日处理事件</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-panel" aria-label="登录表单">
+      <div class="form-heading">
+        <span>WELCOME BACK</span>
+        <h2>账号登录</h2>
+        <p>请输入用户名和密码进入智慧运营数据中心。</p>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="username">用户名</label>
+          <div class="input-wrap">
+            <span class="input-icon" aria-hidden="true">👤</span>
+            <input class="form-input" id="username" name="username" type="text" autocomplete="username" placeholder="请输入用户名 / 手机号 / 邮箱">
+          </div>
+          <p class="error-message" id="usernameError" aria-live="polite"></p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">密码</label>
+          <div class="input-wrap">
+            <span class="input-icon" aria-hidden="true">🔒</span>
+            <input class="form-input" id="password" name="password" type="password" autocomplete="current-password" placeholder="请输入 6-20 位密码">
+            <button class="password-toggle" id="togglePassword" type="button" aria-label="显示密码">显示</button>
+          </div>
+          <p class="error-message" id="passwordError" aria-live="polite"></p>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-label" for="rememberMe">
+            <input id="rememberMe" name="rememberMe" type="checkbox">
+            <span>记住我</span>
+          </label>
+          <a href="#" aria-label="找回密码">忘记密码？</a>
+        </div>
+
+        <button class="submit-btn" id="submitButton" type="submit">立即登录</button>
+      </form>
+
+      <p class="form-footer">还没有账号？ <a href="#" aria-label="注册新账号">立即注册</a></p>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const form = document.querySelector("#loginForm");
+    const usernameInput = document.querySelector("#username");
+    const passwordInput = document.querySelector("#password");
+    const rememberInput = document.querySelector("#rememberMe");
+    const submitButton = document.querySelector("#submitButton");
+    const togglePasswordButton = document.querySelector("#togglePassword");
+    const toast = document.querySelector("#toast");
+    const storageKey = "smartOpsRememberedUser";
+
+    /**
+     * 获取指定输入框对应的错误提示元素。
+     *
+     * @param {HTMLInputElement} input - 需要展示校验错误的表单输入框。
+     * @returns {HTMLElement | null} 返回与输入框 ID 匹配的错误提示容器。
+     */
+    function getErrorElement(input) {
+      return document.querySelector(`#${input.id}Error`);
+    }
+
+    /**
+     * 设置单个表单字段的错误状态，统一处理样式与可访问性提示。
+     *
+     * @param {HTMLInputElement} input - 当前被校验的表单输入框。
+     * @param {string} message - 需要展示的错误信息，空字符串表示清除错误。
+     * @returns {void}
+     */
+    function setFieldError(input, message) {
+      const errorElement = getErrorElement(input);
+      input.classList.toggle("is-invalid", Boolean(message));
+      input.setAttribute("aria-invalid", String(Boolean(message)));
+
+      if (errorElement) {
+        errorElement.textContent = message;
+      }
+    }
+
+    /**
+     * 校验用户名字段，要求非空且长度不小于 3 个字符。
+     *
+     * @returns {boolean} 用户名满足规则时返回 true，否则返回 false。
+     */
+    function validateUsername() {
+      const value = usernameInput.value.trim();
+
+      if (!value) {
+        setFieldError(usernameInput, "请输入用户名。");
+        return false;
+      }
+
+      if (value.length < 3) {
+        setFieldError(usernameInput, "用户名至少需要 3 个字符。");
+        return false;
+      }
+
+      setFieldError(usernameInput, "");
+      return true;
+    }
+
+    /**
+     * 校验密码字段，要求长度为 6-20 位且同时包含字母和数字。
+     *
+     * @returns {boolean} 密码满足规则时返回 true，否则返回 false。
+     */
+    function validatePassword() {
+      const value = passwordInput.value;
+      const hasLetter = /[a-zA-Z]/.test(value);
+      const hasNumber = /\d/.test(value);
+
+      if (!value) {
+        setFieldError(passwordInput, "请输入密码。");
+        return false;
+      }
+
+      if (value.length < 6 || value.length > 20) {
+        setFieldError(passwordInput, "密码长度需要为 6-20 位。");
+        return false;
+      }
+
+      if (!hasLetter || !hasNumber) {
+        setFieldError(passwordInput, "密码需同时包含字母和数字。");
+        return false;
+      }
+
+      setFieldError(passwordInput, "");
+      return true;
+    }
+
+    /**
+     * 统一执行登录表单校验。
+     *
+     * @returns {boolean} 所有字段都通过校验时返回 true。
+     */
+    function validateForm() {
+      const isUsernameValid = validateUsername();
+      const isPasswordValid = validatePassword();
+      return isUsernameValid && isPasswordValid;
+    }
+
+    /**
+     * 展示顶部轻提示，用于反馈登录模拟流程的结果。
+     *
+     * @param {string} message - 需要展示给用户的提示文案。
+     * @returns {void}
+     */
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("is-visible");
+
+      window.setTimeout(() => {
+        toast.classList.remove("is-visible");
+      }, 2600);
+    }
+
+    /**
+     * 根据勾选状态保存或清理记住我的用户名。
+     *
+     * @returns {void}
+     */
+    function persistRememberedUser() {
+      const username = usernameInput.value.trim();
+
+      if (rememberInput.checked) {
+        localStorage.setItem(storageKey, username);
+        return;
+      }
+
+      localStorage.removeItem(storageKey);
+    }
+
+    /**
+     * 从本地缓存恢复被记住的用户名，并同步复选框状态。
+     *
+     * @returns {void}
+     */
+    function hydrateRememberedUser() {
+      const rememberedUser = localStorage.getItem(storageKey);
+
+      if (rememberedUser) {
+        usernameInput.value = rememberedUser;
+        rememberInput.checked = true;
+      }
+    }
+
+    /**
+     * 模拟前端登录请求，展示加载态并给出成功反馈。
+     *
+     * @returns {void}
+     */
+    function simulateLogin() {
+      submitButton.disabled = true;
+      submitButton.classList.add("is-loading");
+      submitButton.textContent = "登录中...";
+
+      window.setTimeout(() => {
+        persistRememberedUser();
+        submitButton.disabled = false;
+        submitButton.classList.remove("is-loading");
+        submitButton.textContent = "立即登录";
+        showToast("校验通过，欢迎进入智慧运营平台！");
+      }, 900);
+    }
+
+    /**
+     * 切换密码输入框的可见状态，同时更新按钮文案和可访问性说明。
+     *
+     * @returns {void}
+     */
+    function togglePasswordVisibility() {
+      const shouldShowPassword = passwordInput.type === "password";
+      passwordInput.type = shouldShowPassword ? "text" : "password";
+      togglePasswordButton.textContent = shouldShowPassword ? "隐藏" : "显示";
+      togglePasswordButton.setAttribute("aria-label", shouldShowPassword ? "隐藏密码" : "显示密码");
+    }
+
+    /**
+     * 注册登录页的交互事件，并启动本地缓存恢复逻辑。
+     *
+     * @returns {void}
+     */
+    function initLoginPage() {
+      hydrateRememberedUser();
+
+      usernameInput.addEventListener("blur", validateUsername);
+      passwordInput.addEventListener("blur", validatePassword);
+      usernameInput.addEventListener("input", () => setFieldError(usernameInput, ""));
+      passwordInput.addEventListener("input", () => setFieldError(passwordInput, ""));
+      togglePasswordButton.addEventListener("click", togglePasswordVisibility);
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        if (validateForm()) {
+          simulateLogin();
+        }
+      });
+    }
+
+    initLoginPage();
+  </script>
+</body>
+</html>

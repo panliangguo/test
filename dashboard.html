@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧运营数据大屏</title>
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-soft: rgba(102, 126, 234, 0.22);
+      --primary-glow: rgba(102, 126, 234, 0.5);
+      --secondary: #764ba2;
+      --cyan: #36d1dc;
+      --green: #2dd4bf;
+      --yellow: #facc15;
+      --red: #fb7185;
+      --bg: #080b1f;
+      --panel: rgba(15, 21, 48, 0.78);
+      --panel-strong: rgba(24, 31, 67, 0.92);
+      --border: rgba(102, 126, 234, 0.28);
+      --text: #f7f8ff;
+      --muted: #96a0c4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      font-family: "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 12% 20%, rgba(102, 126, 234, 0.22), transparent 30%),
+        radial-gradient(circle at 86% 12%, rgba(118, 75, 162, 0.22), transparent 28%),
+        linear-gradient(135deg, #060817 0%, #0b1230 48%, #120d2b 100%);
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      content: "";
+      background-image:
+        linear-gradient(rgba(102, 126, 234, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(102, 126, 234, 0.08) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: radial-gradient(circle at center, black 0%, transparent 76%);
+    }
+
+    body::after {
+      position: fixed;
+      inset: auto -12% -22% -12%;
+      z-index: -1;
+      height: 320px;
+      content: "";
+      background: radial-gradient(ellipse at center, rgba(102, 126, 234, 0.34), transparent 70%);
+      filter: blur(18px);
+    }
+
+    .dashboard {
+      width: min(1920px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      min-height: 86px;
+      margin-bottom: 18px;
+      padding: 0 22px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(20, 28, 64, 0.86), rgba(10, 15, 36, 0.72));
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28), inset 0 0 42px rgba(102, 126, 234, 0.08);
+      overflow: hidden;
+    }
+
+    .topbar::before,
+    .topbar::after {
+      position: absolute;
+      top: 50%;
+      width: 24%;
+      height: 1px;
+      content: "";
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.85), transparent);
+    }
+
+    .topbar::before {
+      left: 24px;
+    }
+
+    .topbar::after {
+      right: 24px;
+    }
+
+    .topbar__left,
+    .topbar__right {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .topbar__right {
+      justify-content: flex-end;
+    }
+
+    .system-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid rgba(102, 126, 234, 0.34);
+      border-radius: 999px;
+      color: #cfd6ff;
+      font-size: 13px;
+      background: rgba(102, 126, 234, 0.12);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 16px var(--green);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    .title-block {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(26px, 3vw, 46px);
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 24px rgba(102, 126, 234, 0.88);
+    }
+
+    .title-block p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    .clock {
+      min-width: 210px;
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-align: right;
+    }
+
+    .clock small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .kpi-card {
+      position: relative;
+      min-height: 142px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      background:
+        linear-gradient(145deg, rgba(102, 126, 234, 0.18), rgba(15, 21, 48, 0.82)),
+        var(--panel);
+      box-shadow: inset 0 0 30px rgba(102, 126, 234, 0.08);
+    }
+
+    .kpi-card::after {
+      position: absolute;
+      right: -44px;
+      bottom: -44px;
+      width: 130px;
+      height: 130px;
+      content: "";
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.3), transparent 70%);
+    }
+
+    .kpi-card__label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .kpi-icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 0 24px rgba(102, 126, 234, 0.42);
+    }
+
+    .kpi-value {
+      position: relative;
+      z-index: 1;
+      margin: 16px 0 10px;
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .kpi-value small {
+      margin-left: 4px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .kpi-trend {
+      position: relative;
+      z-index: 1;
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .screen-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1.35fr 1.05fr;
+      gap: 16px;
+    }
+
+    .column {
+      display: grid;
+      gap: 16px;
+    }
+
+    .center-column {
+      grid-template-rows: 1.08fr 0.92fr;
+    }
+
+    .panel {
+      position: relative;
+      min-height: 260px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22), inset 0 0 34px rgba(102, 126, 234, 0.06);
+      overflow: hidden;
+    }
+
+    .panel::before {
+      position: absolute;
+      top: 0;
+      left: 18px;
+      right: 18px;
+      height: 1px;
+      content: "";
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.92), transparent);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.03em;
+    }
+
+    .panel-title::before {
+      width: 8px;
+      height: 18px;
+      content: "";
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--primary), var(--cyan));
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .panel-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chart-canvas {
+      width: 100%;
+      height: 250px;
+      display: block;
+    }
+
+    .large-chart {
+      height: 365px;
+    }
+
+    .map-panel {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+    }
+
+    .radar-map {
+      position: relative;
+      width: min(480px, 88%);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, rgba(102, 126, 234, 0.16) 0 18%, transparent 19% 31%, rgba(102, 126, 234, 0.12) 32% 33%, transparent 34% 49%, rgba(102, 126, 234, 0.1) 50% 51%, transparent 52%),
+        conic-gradient(from 0deg, rgba(102, 126, 234, 0), rgba(102, 126, 234, 0.5), rgba(54, 209, 220, 0.15), rgba(102, 126, 234, 0));
+      box-shadow: inset 0 0 80px rgba(102, 126, 234, 0.22), 0 0 70px rgba(102, 126, 234, 0.14);
+    }
+
+    .radar-map::before,
+    .radar-map::after {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      content: "";
+      background: rgba(102, 126, 234, 0.42);
+      transform-origin: left center;
+    }
+
+    .radar-map::before {
+      width: 50%;
+      height: 1px;
+      transform: rotate(0deg);
+    }
+
+    .radar-map::after {
+      width: 1px;
+      height: 50%;
+      transform: rotate(0deg) translateY(-100%);
+    }
+
+    .radar-core {
+      z-index: 1;
+      width: 118px;
+      height: 118px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(102, 126, 234, 0.55);
+      border-radius: 50%;
+      color: #ffffff;
+      font-weight: 900;
+      text-align: center;
+      background: rgba(8, 11, 31, 0.82);
+      box-shadow: 0 0 44px rgba(102, 126, 234, 0.48);
+    }
+
+    .map-node {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border: 3px solid rgba(255, 255, 255, 0.88);
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 20px var(--primary);
+    }
+
+    .map-node:nth-child(2) {
+      top: 18%;
+      left: 28%;
+    }
+
+    .map-node:nth-child(3) {
+      top: 26%;
+      right: 20%;
+      background: var(--green);
+      box-shadow: 0 0 20px var(--green);
+    }
+
+    .map-node:nth-child(4) {
+      right: 26%;
+      bottom: 18%;
+      background: var(--yellow);
+      box-shadow: 0 0 20px var(--yellow);
+    }
+
+    .map-node:nth-child(5) {
+      left: 18%;
+      bottom: 30%;
+      background: var(--cyan);
+      box-shadow: 0 0 20px var(--cyan);
+    }
+
+    .rank-list {
+      height: 238px;
+      overflow: hidden;
+    }
+
+    .rank-track {
+      display: grid;
+      gap: 10px;
+      animation: scrollRank 18s linear infinite;
+    }
+
+    .rank-item {
+      display: grid;
+      grid-template-columns: 38px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid rgba(102, 126, 234, 0.18);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .rank-index {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: #ffffff;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+    }
+
+    .rank-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .rank-meta {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .rank-value {
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .status-card {
+      padding: 14px;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .status-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 22px;
+    }
+
+    .status-bar {
+      height: 7px;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .status-bar i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--cyan));
+    }
+
+    .activity-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .activity-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .activity-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 16px var(--green);
+    }
+
+    .activity-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .activity-desc {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .activity-time {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @keyframes pulse {
+      0%,
+      100% {
+        opacity: 0.55;
+        transform: scale(0.9);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.22);
+      }
+    }
+
+    @keyframes scrollRank {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(-50%);
+      }
+    }
+
+    @media (max-width: 1280px) {
+      .screen-grid,
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .center-column {
+        grid-column: 1 / -1;
+        grid-row: 1;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .dashboard {
+        padding: 14px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .topbar__left,
+      .topbar__right {
+        justify-content: center;
+      }
+
+      .clock {
+        text-align: center;
+      }
+
+      .screen-grid,
+      .kpi-grid,
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .large-chart {
+        height: 280px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="dashboard" aria-label="智慧运营数据大屏">
+    <header class="topbar">
+      <div class="topbar__left">
+        <span class="system-pill"><i class="pulse-dot"></i>系统运行正常</span>
+        <span class="system-pill">数据源：Mock API</span>
+      </div>
+      <div class="title-block">
+        <h1>智慧运营数据大屏</h1>
+        <p>Smart Operation Command Center</p>
+      </div>
+      <div class="topbar__right">
+        <div class="clock" id="clock">--:--:--<small>----年--月--日</small></div>
+      </div>
+    </header>
+
+    <section class="kpi-grid" aria-label="核心 KPI">
+      <article class="kpi-card">
+        <div class="kpi-card__label">
+          <span>今日成交额</span>
+          <i class="kpi-icon">¥</i>
+        </div>
+        <div class="kpi-value"><span class="counter" data-target="1286.8" data-decimal="1">0</span><small>万</small></div>
+        <div class="kpi-trend">较昨日 +18.6%</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-card__label">
+          <span>活跃用户</span>
+          <i class="kpi-icon">人</i>
+        </div>
+        <div class="kpi-value"><span class="counter" data-target="98642">0</span><small>人</small></div>
+        <div class="kpi-trend">7 日留存 +9.4%</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-card__label">
+          <span>订单总量</span>
+          <i class="kpi-icon">单</i>
+        </div>
+        <div class="kpi-value"><span class="counter" data-target="42680">0</span><small>笔</small></div>
+        <div class="kpi-trend">履约准时率 96.2%</div>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-card__label">
+          <span>转化率</span>
+          <i class="kpi-icon">%</i>
+        </div>
+        <div class="kpi-value"><span class="counter" data-target="38.7" data-decimal="1">0</span><small>%</small></div>
+        <div class="kpi-trend">漏斗效率 +6.8%</div>
+      </article>
+    </section>
+
+    <section class="screen-grid">
+      <div class="column">
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">渠道订单柱状图</h2>
+            <span class="panel-subtitle">单位：单</span>
+          </div>
+          <canvas class="chart-canvas" id="barChart" aria-label="渠道订单柱状图"></canvas>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">城市销售排行榜</h2>
+            <span class="panel-subtitle">实时滚动</span>
+          </div>
+          <div class="rank-list">
+            <div class="rank-track" id="rankTrack"></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="column center-column">
+        <article class="panel map-panel">
+          <div class="panel-header" style="position:absolute; top:18px; left:18px; right:18px;">
+            <h2 class="panel-title">全国运营态势</h2>
+            <span class="panel-subtitle">节点在线率 98.7%</span>
+          </div>
+          <div class="radar-map" aria-label="运营态势雷达图">
+            <div class="radar-core">运营<br>中枢</div>
+            <i class="map-node"></i>
+            <i class="map-node"></i>
+            <i class="map-node"></i>
+            <i class="map-node"></i>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">GMV 折线趋势</h2>
+            <span class="panel-subtitle">近 12 小时</span>
+          </div>
+          <canvas class="chart-canvas large-chart" id="lineChart" aria-label="GMV 折线趋势图"></canvas>
+        </article>
+      </div>
+
+      <div class="column">
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">品类成交环形图</h2>
+            <span class="panel-subtitle">占比</span>
+          </div>
+          <canvas class="chart-canvas" id="donutChart" aria-label="品类成交环形图"></canvas>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">订单状态分布</h2>
+            <span class="panel-subtitle">Mock 实时快照</span>
+          </div>
+          <div class="status-grid" id="statusGrid"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">实时运营事件</h2>
+            <span class="panel-subtitle">最近动态</span>
+          </div>
+          <div class="activity-list" id="activityList"></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const mockData = {
+      channels: [
+        { name: "小程序", value: 8200 },
+        { name: "App", value: 11200 },
+        { name: "官网", value: 6900 },
+        { name: "直播", value: 13400 },
+        { name: "社群", value: 7600 },
+        { name: "门店", value: 9800 }
+      ],
+      categories: [
+        { name: "数码", value: 32, color: "#667eea" },
+        { name: "美妆", value: 24, color: "#36d1dc" },
+        { name: "家居", value: 18, color: "#2dd4bf" },
+        { name: "食品", value: 16, color: "#facc15" },
+        { name: "其他", value: 10, color: "#fb7185" }
+      ],
+      trend: [86, 94, 102, 98, 118, 126, 132, 148, 139, 156, 172, 188],
+      trendLabels: ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"],
+      ranks: [
+        { city: "上海", value: "¥186.2万", meta: "华东核心仓 · 转化率 42.1%" },
+        { city: "深圳", value: "¥168.8万", meta: "直播渠道拉动 · 环比 +19%" },
+        { city: "杭州", value: "¥152.5万", meta: "会员复购高峰 · 环比 +16%" },
+        { city: "北京", value: "¥139.7万", meta: "企业采购提升 · 环比 +12%" },
+        { city: "成都", value: "¥126.4万", meta: "本地生活订单增长" },
+        { city: "广州", value: "¥118.9万", meta: "门店自提占比 31%" },
+        { city: "武汉", value: "¥96.6万", meta: "区域活动转化稳定" },
+        { city: "南京", value: "¥88.3万", meta: "新客增长 +8.7%" }
+      ],
+      statuses: [
+        { name: "待支付", value: 4280, percent: 18 },
+        { name: "待发货", value: 7620, percent: 32 },
+        { name: "配送中", value: 9120, percent: 38 },
+        { name: "已完成", value: 21660, percent: 86 }
+      ],
+      activities: [
+        { name: "直播渠道订单峰值刷新", desc: "单分钟新增 326 笔订单", time: "刚刚" },
+        { name: "华东仓补货预警解除", desc: "库存健康度恢复至 91%", time: "2 分钟前" },
+        { name: "会员券包投放完成", desc: "触达用户 58,000 人", time: "8 分钟前" }
+      ]
+    };
+
+    /**
+     * 将数字格式化为带千分位的中文大屏展示文本。
+     *
+     * @param {number} value - 需要格式化的数值。
+     * @param {number} decimal - 需要保留的小数位数。
+     * @returns {string} 返回带千分位分隔符的数值字符串。
+     */
+    function formatNumber(value, decimal = 0) {
+      return Number(value).toLocaleString("zh-CN", {
+        minimumFractionDigits: decimal,
+        maximumFractionDigits: decimal
+      });
+    }
+
+    /**
+     * 根据设备像素比初始化 Canvas，避免高清屏下图表模糊。
+     *
+     * @param {HTMLCanvasElement} canvas - 需要初始化的 Canvas 元素。
+     * @returns {{ctx: CanvasRenderingContext2D, width: number, height: number}} 返回绘图上下文和 CSS 像素尺寸。
+     */
+    function setupCanvas(canvas) {
+      const ratio = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * ratio;
+      canvas.height = rect.height * ratio;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { ctx, width: rect.width, height: rect.height };
+    }
+
+    /**
+     * 绘制带透明度的圆角矩形，用于柱状图柱体和视觉高光。
+     *
+     * @param {CanvasRenderingContext2D} ctx - Canvas 2D 绘图上下文。
+     * @param {number} x - 矩形左上角 X 坐标。
+     * @param {number} y - 矩形左上角 Y 坐标。
+     * @param {number} width - 矩形宽度。
+     * @param {number} height - 矩形高度。
+     * @param {number} radius - 圆角半径。
+     * @returns {void}
+     */
+    function drawRoundRect(ctx, x, y, width, height, radius) {
+      const safeRadius = Math.min(radius, width / 2, Math.abs(height) / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + safeRadius, y);
+      ctx.lineTo(x + width - safeRadius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
+      ctx.lineTo(x + width, y + height - safeRadius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
+      ctx.lineTo(x + safeRadius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
+      ctx.lineTo(x, y + safeRadius);
+      ctx.quadraticCurveTo(x, y, x + safeRadius, y);
+      ctx.closePath();
+    }
+
+    /**
+     * 绘制渠道订单柱状图，使用紫色渐变保持与整体主题一致。
+     *
+     * @returns {void}
+     */
+    function drawBarChart() {
+      const canvas = document.querySelector("#barChart");
+      const { ctx, width, height } = setupCanvas(canvas);
+      const padding = { top: 18, right: 18, bottom: 42, left: 42 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const maxValue = Math.max(...mockData.channels.map((item) => item.value));
+      const barWidth = chartWidth / mockData.channels.length * 0.52;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.strokeStyle = "rgba(150, 160, 196, 0.16)";
+      ctx.fillStyle = "rgba(150, 160, 196, 0.72)";
+      ctx.font = "12px Microsoft YaHei";
+
+      for (let i = 0; i <= 4; i += 1) {
+        const y = padding.top + chartHeight / 4 * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+      }
+
+      mockData.channels.forEach((item, index) => {
+        const x = padding.left + chartWidth / mockData.channels.length * index + (chartWidth / mockData.channels.length - barWidth) / 2;
+        const barHeight = chartHeight * (item.value / maxValue);
+        const y = padding.top + chartHeight - barHeight;
+        const gradient = ctx.createLinearGradient(0, y, 0, padding.top + chartHeight);
+        gradient.addColorStop(0, "#36d1dc");
+        gradient.addColorStop(0.45, "#667eea");
+        gradient.addColorStop(1, "rgba(118, 75, 162, 0.72)");
+
+        drawRoundRect(ctx, x, y, barWidth, barHeight, 9);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.fillStyle = "#dce2ff";
+        ctx.textAlign = "center";
+        ctx.fillText(item.name, x + barWidth / 2, height - 15);
+        ctx.fillStyle = "rgba(247, 248, 255, 0.9)";
+        ctx.fillText(String(item.value), x + barWidth / 2, y - 8);
+      });
+    }
+
+    /**
+     * 绘制品类成交环形图，并在中心展示总占比说明。
+     *
+     * @returns {void}
+     */
+    function drawDonutChart() {
+      const canvas = document.querySelector("#donutChart");
+      const { ctx, width, height } = setupCanvas(canvas);
+      const centerX = width / 2;
+      const centerY = height / 2 + 6;
+      const radius = Math.min(width, height) * 0.32;
+      const lineWidth = 24;
+      const total = mockData.categories.reduce((sum, item) => sum + item.value, 0);
+      let startAngle = -Math.PI / 2;
+
+      ctx.clearRect(0, 0, width, height);
+
+      mockData.categories.forEach((item) => {
+        const angle = (item.value / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, startAngle, startAngle + angle);
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = "round";
+        ctx.shadowColor = item.color;
+        ctx.shadowBlur = 14;
+        ctx.stroke();
+        startAngle += angle;
+      });
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 26px Microsoft YaHei";
+      ctx.textAlign = "center";
+      ctx.fillText("100%", centerX, centerY + 4);
+      ctx.fillStyle = "rgba(150, 160, 196, 0.86)";
+      ctx.font = "12px Microsoft YaHei";
+      ctx.fillText("成交结构", centerX, centerY + 26);
+
+      mockData.categories.forEach((item, index) => {
+        const x = 18 + (index % 2) * (width / 2);
+        const y = 18 + Math.floor(index / 2) * 24;
+        ctx.fillStyle = item.color;
+        ctx.fillRect(x, y, 10, 10);
+        ctx.fillStyle = "rgba(220, 226, 255, 0.9)";
+        ctx.textAlign = "left";
+        ctx.font = "12px Microsoft YaHei";
+        ctx.fillText(`${item.name} ${item.value}%`, x + 16, y + 10);
+      });
+    }
+
+    /**
+     * 绘制近 12 小时 GMV 折线趋势图，包含网格线、面积渐变和节点高亮。
+     *
+     * @returns {void}
+     */
+    function drawLineChart() {
+      const canvas = document.querySelector("#lineChart");
+      const { ctx, width, height } = setupCanvas(canvas);
+      const padding = { top: 26, right: 24, bottom: 42, left: 42 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const maxValue = Math.max(...mockData.trend) * 1.12;
+      const minValue = Math.min(...mockData.trend) * 0.86;
+      const points = mockData.trend.map((value, index) => ({
+        x: padding.left + chartWidth / (mockData.trend.length - 1) * index,
+        y: padding.top + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight,
+        value
+      }));
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.strokeStyle = "rgba(150, 160, 196, 0.14)";
+      ctx.fillStyle = "rgba(150, 160, 196, 0.72)";
+      ctx.font = "12px Microsoft YaHei";
+
+      for (let i = 0; i <= 4; i += 1) {
+        const y = padding.top + chartHeight / 4 * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+      }
+
+      const areaGradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+      areaGradient.addColorStop(0, "rgba(102, 126, 234, 0.34)");
+      areaGradient.addColorStop(1, "rgba(102, 126, 234, 0)");
+
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        if (index === 0) {
+          ctx.moveTo(point.x, point.y);
+          return;
+        }
+        const previousPoint = points[index - 1];
+        const controlX = (previousPoint.x + point.x) / 2;
+        ctx.bezierCurveTo(controlX, previousPoint.y, controlX, point.y, point.x, point.y);
+      });
+      ctx.lineTo(points[points.length - 1].x, height - padding.bottom);
+      ctx.lineTo(points[0].x, height - padding.bottom);
+      ctx.closePath();
+      ctx.fillStyle = areaGradient;
+      ctx.fill();
+
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        if (index === 0) {
+          ctx.moveTo(point.x, point.y);
+          return;
+        }
+        const previousPoint = points[index - 1];
+        const controlX = (previousPoint.x + point.x) / 2;
+        ctx.bezierCurveTo(controlX, previousPoint.y, controlX, point.y, point.x, point.y);
+      });
+      ctx.strokeStyle = "#667eea";
+      ctx.lineWidth = 3;
+      ctx.shadowColor = "rgba(102, 126, 234, 0.8)";
+      ctx.shadowBlur = 16;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      points.forEach((point, index) => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = index === points.length - 1 ? "#36d1dc" : "#ffffff";
+        ctx.fill();
+
+        if (index % 2 === 0 || index === points.length - 1) {
+          ctx.fillStyle = "rgba(220, 226, 255, 0.82)";
+          ctx.textAlign = "center";
+          ctx.fillText(mockData.trendLabels[index], point.x, height - 16);
+        }
+      });
+    }
+
+    /**
+     * 启动 KPI 数字递增动画，让核心指标从 0 平滑过渡到目标值。
+     *
+     * @returns {void}
+     */
+    function animateCounters() {
+      const counters = document.querySelectorAll(".counter");
+      const duration = 1300;
+      const startTime = performance.now();
+
+      /**
+       * 每一帧按时间进度刷新数值，使用缓动曲线降低动画突兀感。
+       *
+       * @param {number} currentTime - requestAnimationFrame 提供的当前高精度时间。
+       * @returns {void}
+       */
+      function update(currentTime) {
+        const progress = Math.min((currentTime - startTime) / duration, 1);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+        counters.forEach((counter) => {
+          const target = Number(counter.dataset.target);
+          const decimal = Number(counter.dataset.decimal || 0);
+          counter.textContent = formatNumber(target * easedProgress, decimal);
+        });
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    /**
+     * 渲染销售排行榜，为了实现无缝滚动会复制一份列表内容。
+     *
+     * @returns {void}
+     */
+    function renderRankList() {
+      const rankTrack = document.querySelector("#rankTrack");
+      const rows = [...mockData.ranks, ...mockData.ranks].map((item, index) => {
+        const realIndex = index % mockData.ranks.length;
+        return `
+          <div class="rank-item">
+            <span class="rank-index">${realIndex + 1}</span>
+            <div>
+              <div class="rank-name">${item.city}</div>
+              <div class="rank-meta">${item.meta}</div>
+            </div>
+            <strong class="rank-value">${item.value}</strong>
+          </div>
+        `;
+      });
+
+      rankTrack.innerHTML = rows.join("");
+    }
+
+    /**
+     * 渲染订单状态分布卡片，进度条宽度来自 mock 百分比数据。
+     *
+     * @returns {void}
+     */
+    function renderStatusCards() {
+      const statusGrid = document.querySelector("#statusGrid");
+      statusGrid.innerHTML = mockData.statuses.map((item) => `
+        <div class="status-card">
+          <span>${item.name}</span>
+          <strong>${formatNumber(item.value)}</strong>
+          <div class="status-bar" aria-label="${item.name}占比 ${item.percent}%">
+            <i style="width: ${item.percent}%"></i>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    /**
+     * 渲染实时运营事件列表，展示最近的 mock 业务动态。
+     *
+     * @returns {void}
+     */
+    function renderActivities() {
+      const activityList = document.querySelector("#activityList");
+      activityList.innerHTML = mockData.activities.map((item) => `
+        <div class="activity-item">
+          <span class="activity-dot"></span>
+          <div>
+            <div class="activity-name">${item.name}</div>
+            <div class="activity-desc">${item.desc}</div>
+          </div>
+          <span class="activity-time">${item.time}</span>
+        </div>
+      `).join("");
+    }
+
+    /**
+     * 刷新顶部实时时钟，同时展示本地中文日期。
+     *
+     * @returns {void}
+     */
+    function updateClock() {
+      const clock = document.querySelector("#clock");
+      const now = new Date();
+      const time = now.toLocaleTimeString("zh-CN", { hour12: false });
+      const date = now.toLocaleDateString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        weekday: "long"
+      });
+
+      clock.innerHTML = `${time}<small>${date}</small>`;
+    }
+
+    /**
+     * 统一绘制所有 Canvas 图表，窗口尺寸变化时也复用该函数重绘。
+     *
+     * @returns {void}
+     */
+    function renderCharts() {
+      drawBarChart();
+      drawDonutChart();
+      drawLineChart();
+    }
+
+    /**
+     * 初始化智慧运营数据大屏的全部渲染和定时任务。
+     *
+     * @returns {void}
+     */
+    function initDashboard() {
+      renderRankList();
+      renderStatusCards();
+      renderActivities();
+      renderCharts();
+      animateCounters();
+      updateClock();
+      window.setInterval(updateClock, 1000);
+      window.addEventListener("resize", renderCharts);
+    }
+
+    initDashboard();
+  </script>
+</body>
+</html>

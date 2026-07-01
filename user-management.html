@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧运营平台 - 用户管理</title>
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5268d9;
+      --secondary: #764ba2;
+      --bg: #f4f6ff;
+      --surface: rgba(255, 255, 255, 0.92);
+      --surface-strong: #ffffff;
+      --text: #20233f;
+      --muted: #747b9b;
+      --border: rgba(102, 126, 234, 0.18);
+      --shadow: 0 22px 60px rgba(59, 68, 132, 0.16);
+      --success: #2dd4bf;
+      --warning: #f59e0b;
+      --danger: #fb7185;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      font-family: "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(102, 126, 234, 0.2), transparent 28%),
+        radial-gradient(circle at 88% 8%, rgba(118, 75, 162, 0.16), transparent 30%),
+        linear-gradient(135deg, #eef2ff 0%, #f8f7ff 52%, #f5efff 100%);
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      content: "";
+      background-image:
+        linear-gradient(rgba(102, 126, 234, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(102, 126, 234, 0.07) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(180deg, black, transparent 78%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 24px;
+      margin-bottom: 22px;
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 30px;
+      overflow: hidden;
+      color: #ffffff;
+      background:
+        linear-gradient(135deg, rgba(102, 126, 234, 0.96), rgba(118, 75, 162, 0.92)),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 34%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      position: absolute;
+      right: -80px;
+      bottom: -110px;
+      width: 280px;
+      height: 280px;
+      content: "";
+      border: 44px solid rgba(255, 255, 255, 0.13);
+      border-radius: 50%;
+    }
+
+    .hero__content,
+    .hero__meta {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 8px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      border-radius: 999px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(32px, 4vw, 52px);
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      max-width: 680px;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.78);
+      line-height: 1.8;
+    }
+
+    .hero__meta {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      align-content: center;
+    }
+
+    .hero-stat {
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.13);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-stat strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 28px;
+    }
+
+    .hero-stat span {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: 0 14px 42px rgba(59, 68, 132, 0.1);
+      backdrop-filter: blur(18px);
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: minmax(240px, 1.2fr) repeat(3, minmax(140px, 0.45fr));
+      gap: 12px;
+    }
+
+    .field {
+      position: relative;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      height: 46px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      outline: none;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.82);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .field input {
+      padding: 0 16px 0 42px;
+    }
+
+    .field select {
+      padding: 0 14px;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(102, 126, 234, 0.72);
+      box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.12);
+    }
+
+    .field__icon {
+      position: absolute;
+      top: 50%;
+      left: 15px;
+      color: var(--primary);
+      transform: translateY(-50%);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 15px;
+      color: #ffffff;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 12px 28px rgba(102, 126, 234, 0.22);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+      box-shadow: 0 16px 36px rgba(102, 126, 234, 0.28);
+      transform: translateY(-1px);
+    }
+
+    .btn--ghost {
+      border: 1px solid var(--border);
+      color: var(--primary);
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: none;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 330px;
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      background: var(--surface);
+      box-shadow: 0 16px 48px rgba(59, 68, 132, 0.12);
+      backdrop-filter: blur(18px);
+    }
+
+    .table-card {
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-header h2,
+    .side-card h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .table-header p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 920px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 16px 18px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      color: #687091;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(102, 126, 234, 0.08);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(102, 126, 234, 0.12);
+      transition: background 0.2s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(102, 126, 234, 0.06);
+    }
+
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 15px;
+      color: #ffffff;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.16);
+    }
+
+    .user-name {
+      font-weight: 800;
+    }
+
+    .user-email {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tag,
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .tag {
+      color: var(--primary);
+      background: rgba(102, 126, 234, 0.12);
+    }
+
+    .status::before {
+      width: 7px;
+      height: 7px;
+      content: "";
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status--active {
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .status--locked {
+      color: var(--warning);
+      background: rgba(245, 158, 11, 0.14);
+    }
+
+    .status--disabled {
+      color: var(--danger);
+      background: rgba(251, 113, 133, 0.14);
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--primary);
+      background: rgba(255, 255, 255, 0.78);
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(102, 126, 234, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .empty {
+      display: none;
+      padding: 48px 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 22px 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pagination__buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .side-column {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .side-card {
+      padding: 20px;
+    }
+
+    .role-list,
+    .audit-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .role-item,
+    .audit-item {
+      padding: 14px;
+      border: 1px solid rgba(102, 126, 234, 0.13);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.58);
+    }
+
+    .role-top,
+    .audit-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 800;
+    }
+
+    .role-item p,
+    .audit-item p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .progress {
+      height: 8px;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .progress i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(16, 18, 40, 0.42);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal.is-open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(520px, 100%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 26px;
+      overflow: hidden;
+      background: var(--surface-strong);
+      box-shadow: 0 30px 80px rgba(22, 27, 72, 0.28);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 22px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .modal-body {
+      display: grid;
+      gap: 14px;
+      padding: 22px;
+    }
+
+    .form-label {
+      display: grid;
+      gap: 8px;
+      color: #444a6f;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .form-label input,
+    .form-label select {
+      height: 44px;
+      padding: 0 13px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      outline: none;
+      color: var(--text);
+      background: rgba(246, 248, 255, 0.9);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 0 22px 22px;
+    }
+
+    .toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      z-index: 20;
+      min-width: 260px;
+      padding: 13px 18px;
+      border-radius: 16px;
+      color: #ffffff;
+      text-align: center;
+      background: rgba(28, 33, 70, 0.9);
+      box-shadow: 0 18px 42px rgba(28, 33, 70, 0.26);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -16px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 1120px) {
+      .hero,
+      .layout,
+      .toolbar,
+      .filters {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 20px, 1440px);
+        padding-top: 14px;
+      }
+
+      .hero,
+      .toolbar,
+      .side-card {
+        padding: 18px;
+        border-radius: 22px;
+      }
+
+      .hero__meta {
+        grid-template-columns: 1fr;
+      }
+
+      .actions,
+      .pagination {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page" aria-label="智慧运营平台用户管理页">
+    <section class="hero">
+      <div class="hero__content">
+        <span class="hero__eyebrow">USER CENTER · 权限与账号治理</span>
+        <h1>用户管理</h1>
+        <p>集中管理平台用户、角色权限、账号状态与最近操作记录，帮助运营团队快速完成用户检索、状态切换和资料维护。</p>
+      </div>
+      <div class="hero__meta" aria-label="用户管理概览">
+        <div class="hero-stat">
+          <strong id="totalUsers">0</strong>
+          <span>用户总数</span>
+        </div>
+        <div class="hero-stat">
+          <strong id="activeUsers">0</strong>
+          <span>启用账号</span>
+        </div>
+        <div class="hero-stat">
+          <strong id="adminUsers">0</strong>
+          <span>管理员</span>
+        </div>
+        <div class="hero-stat">
+          <strong id="lockedUsers">0</strong>
+          <span>需关注账号</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="用户筛选工具栏">
+      <div class="filters">
+        <label class="field" for="keywordInput">
+          <span class="field__icon" aria-hidden="true">⌕</span>
+          <input id="keywordInput" type="search" placeholder="搜索姓名、手机号或邮箱">
+        </label>
+        <label class="field" for="roleFilter">
+          <select id="roleFilter" aria-label="按角色筛选">
+            <option value="all">全部角色</option>
+            <option value="超级管理员">超级管理员</option>
+            <option value="运营经理">运营经理</option>
+            <option value="数据分析师">数据分析师</option>
+            <option value="客服专员">客服专员</option>
+          </select>
+        </label>
+        <label class="field" for="statusFilter">
+          <select id="statusFilter" aria-label="按状态筛选">
+            <option value="all">全部状态</option>
+            <option value="active">启用</option>
+            <option value="locked">锁定</option>
+            <option value="disabled">停用</option>
+          </select>
+        </label>
+        <label class="field" for="departmentFilter">
+          <select id="departmentFilter" aria-label="按部门筛选">
+            <option value="all">全部部门</option>
+            <option value="总部运营">总部运营</option>
+            <option value="数据中心">数据中心</option>
+            <option value="客户成功">客户成功</option>
+            <option value="区域门店">区域门店</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="btn btn--ghost" id="resetButton" type="button">重置筛选</button>
+        <button class="btn" id="createButton" type="button">+ 新增用户</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card table-card">
+        <header class="table-header">
+          <div>
+            <h2>用户列表</h2>
+            <p id="resultSummary">共 0 位用户</p>
+          </div>
+          <button class="btn btn--ghost" id="exportButton" type="button">导出视图</button>
+        </header>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>用户</th>
+                <th>角色</th>
+                <th>部门</th>
+                <th>状态</th>
+                <th>最近登录</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="emptyState">没有找到匹配用户，请调整筛选条件。</div>
+        <footer class="pagination">
+          <span id="pageInfo">第 1 / 1 页</span>
+          <div class="pagination__buttons">
+            <button class="btn btn--ghost" id="prevPageButton" type="button">上一页</button>
+            <button class="btn btn--ghost" id="nextPageButton" type="button">下一页</button>
+          </div>
+        </footer>
+      </article>
+
+      <aside class="side-column">
+        <article class="card side-card">
+          <h2>角色分布</h2>
+          <div class="role-list" id="roleList"></div>
+        </article>
+        <article class="card side-card">
+          <h2>最近审计日志</h2>
+          <div class="audit-list" id="auditList"></div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <section class="modal" id="userModal" aria-label="用户编辑弹窗" aria-modal="true" role="dialog">
+    <form class="modal-card" id="userForm">
+      <header class="modal-header">
+        <h3 id="modalTitle">新增用户</h3>
+        <button class="icon-btn" id="closeModalButton" type="button" aria-label="关闭弹窗">×</button>
+      </header>
+      <div class="modal-body">
+        <label class="form-label">
+          姓名
+          <input id="formName" name="name" type="text" required placeholder="请输入姓名">
+        </label>
+        <label class="form-label">
+          邮箱
+          <input id="formEmail" name="email" type="email" required placeholder="name@example.com">
+        </label>
+        <label class="form-label">
+          手机号
+          <input id="formPhone" name="phone" type="tel" required placeholder="请输入手机号">
+        </label>
+        <label class="form-label">
+          角色
+          <select id="formRole" name="role" required>
+            <option value="超级管理员">超级管理员</option>
+            <option value="运营经理">运营经理</option>
+            <option value="数据分析师">数据分析师</option>
+            <option value="客服专员">客服专员</option>
+          </select>
+        </label>
+        <label class="form-label">
+          部门
+          <select id="formDepartment" name="department" required>
+            <option value="总部运营">总部运营</option>
+            <option value="数据中心">数据中心</option>
+            <option value="客户成功">客户成功</option>
+            <option value="区域门店">区域门店</option>
+          </select>
+        </label>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn--ghost" id="cancelModalButton" type="button">取消</button>
+        <button class="btn" type="submit">保存用户</button>
+      </footer>
+    </form>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const users = [
+      { id: 1, name: "林亦辰", email: "lin.yichen@example.com", phone: "13800010001", role: "超级管理员", department: "总部运营", status: "active", lastLogin: "2026-07-01 08:42" },
+      { id: 2, name: "周雨桐", email: "zhou.yutong@example.com", phone: "13800010002", role: "运营经理", department: "总部运营", status: "active", lastLogin: "2026-07-01 08:16" },
+      { id: 3, name: "陈子昂", email: "chen.ziang@example.com", phone: "13800010003", role: "数据分析师", department: "数据中心", status: "locked", lastLogin: "2026-06-30 22:08" },
+      { id: 4, name: "赵清禾", email: "zhao.qinghe@example.com", phone: "13800010004", role: "客服专员", department: "客户成功", status: "active", lastLogin: "2026-07-01 07:58" },
+      { id: 5, name: "王景然", email: "wang.jingran@example.com", phone: "13800010005", role: "运营经理", department: "区域门店", status: "disabled", lastLogin: "2026-06-28 16:31" },
+      { id: 6, name: "许知远", email: "xu.zhiyuan@example.com", phone: "13800010006", role: "数据分析师", department: "数据中心", status: "active", lastLogin: "2026-07-01 06:25" },
+      { id: 7, name: "秦洛宁", email: "qin.luoning@example.com", phone: "13800010007", role: "客服专员", department: "客户成功", status: "active", lastLogin: "2026-06-30 19:44" },
+      { id: 8, name: "陆星河", email: "lu.xinghe@example.com", phone: "13800010008", role: "运营经理", department: "区域门店", status: "locked", lastLogin: "2026-06-29 13:12" },
+      { id: 9, name: "沈知夏", email: "shen.zhixia@example.com", phone: "13800010009", role: "数据分析师", department: "总部运营", status: "active", lastLogin: "2026-07-01 08:02" },
+      { id: 10, name: "顾云舟", email: "gu.yunzhou@example.com", phone: "13800010010", role: "客服专员", department: "客户成功", status: "disabled", lastLogin: "2026-06-27 10:05" }
+    ];
+
+    const audits = [
+      { title: "权限策略更新", detail: "超级管理员调整了数据中心访问范围", time: "5 分钟前" },
+      { title: "账号状态变更", detail: "陆星河账号触发异常登录锁定", time: "18 分钟前" },
+      { title: "新增用户邀请", detail: "客户成功团队新增 1 位客服专员", time: "42 分钟前" }
+    ];
+
+    const statusMap = {
+      active: { text: "启用", className: "status--active" },
+      locked: { text: "锁定", className: "status--locked" },
+      disabled: { text: "停用", className: "status--disabled" }
+    };
+
+    const pageState = {
+      page: 1,
+      pageSize: 6,
+      editingId: null
+    };
+
+    const keywordInput = document.querySelector("#keywordInput");
+    const roleFilter = document.querySelector("#roleFilter");
+    const statusFilter = document.querySelector("#statusFilter");
+    const departmentFilter = document.querySelector("#departmentFilter");
+    const tableBody = document.querySelector("#userTableBody");
+    const emptyState = document.querySelector("#emptyState");
+    const resultSummary = document.querySelector("#resultSummary");
+    const pageInfo = document.querySelector("#pageInfo");
+    const prevPageButton = document.querySelector("#prevPageButton");
+    const nextPageButton = document.querySelector("#nextPageButton");
+    const userModal = document.querySelector("#userModal");
+    const userForm = document.querySelector("#userForm");
+    const toast = document.querySelector("#toast");
+
+    /**
+     * 将用户姓名转换为头像中的两个字缩写。
+     *
+     * @param {string} name - 用户中文姓名。
+     * @returns {string} 返回用于头像展示的姓名后两位字符。
+     */
+    function getAvatarText(name) {
+      return name.slice(-2);
+    }
+
+    /**
+     * 读取当前筛选条件，并返回统一结构方便列表过滤。
+     *
+     * @returns {{keyword: string, role: string, status: string, department: string}} 当前筛选条件集合。
+     */
+    function getFilters() {
+      return {
+        keyword: keywordInput.value.trim().toLowerCase(),
+        role: roleFilter.value,
+        status: statusFilter.value,
+        department: departmentFilter.value
+      };
+    }
+
+    /**
+     * 根据关键字、角色、状态和部门过滤用户列表。
+     *
+     * @returns {Array<object>} 返回符合当前筛选条件的用户数组。
+     */
+    function getFilteredUsers() {
+      const filters = getFilters();
+
+      return users.filter((user) => {
+        const matchedKeyword = !filters.keyword ||
+          user.name.toLowerCase().includes(filters.keyword) ||
+          user.email.toLowerCase().includes(filters.keyword) ||
+          user.phone.includes(filters.keyword);
+        const matchedRole = filters.role === "all" || user.role === filters.role;
+        const matchedStatus = filters.status === "all" || user.status === filters.status;
+        const matchedDepartment = filters.department === "all" || user.department === filters.department;
+
+        return matchedKeyword && matchedRole && matchedStatus && matchedDepartment;
+      });
+    }
+
+    /**
+     * 根据筛选结果和当前页码计算分页数据，避免页码越界。
+     *
+     * @param {Array<object>} filteredUsers - 已经过滤后的用户列表。
+     * @returns {{rows: Array<object>, totalPages: number}} 当前页用户行和总页数。
+     */
+    function getPagedUsers(filteredUsers) {
+      const totalPages = Math.max(Math.ceil(filteredUsers.length / pageState.pageSize), 1);
+      pageState.page = Math.min(pageState.page, totalPages);
+      const start = (pageState.page - 1) * pageState.pageSize;
+      const rows = filteredUsers.slice(start, start + pageState.pageSize);
+
+      return { rows, totalPages };
+    }
+
+    /**
+     * 渲染顶部统计卡片，帮助用户快速了解账号健康状态。
+     *
+     * @returns {void}
+     */
+    function renderStats() {
+      document.querySelector("#totalUsers").textContent = users.length;
+      document.querySelector("#activeUsers").textContent = users.filter((user) => user.status === "active").length;
+      document.querySelector("#adminUsers").textContent = users.filter((user) => user.role === "超级管理员").length;
+      document.querySelector("#lockedUsers").textContent = users.filter((user) => user.status !== "active").length;
+    }
+
+    /**
+     * 根据用户角色聚合数量，并渲染右侧角色分布进度条。
+     *
+     * @returns {void}
+     */
+    function renderRoleDistribution() {
+      const roleList = document.querySelector("#roleList");
+      const roleCounts = users.reduce((result, user) => {
+        result[user.role] = (result[user.role] || 0) + 1;
+        return result;
+      }, {});
+
+      roleList.innerHTML = Object.entries(roleCounts).map(([role, count]) => {
+        const percent = Math.round((count / users.length) * 100);
+        return `
+          <div class="role-item">
+            <div class="role-top">
+              <span>${role}</span>
+              <span>${count} 人</span>
+            </div>
+            <p>占全部用户 ${percent}%</p>
+            <div class="progress" aria-label="${role}占比 ${percent}%">
+              <i style="width: ${percent}%"></i>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    /**
+     * 渲染最近审计日志，用于展示权限与账号相关操作动态。
+     *
+     * @returns {void}
+     */
+    function renderAuditLogs() {
+      const auditList = document.querySelector("#auditList");
+      auditList.innerHTML = audits.map((audit) => `
+        <div class="audit-item">
+          <div class="audit-top">
+            <span>${audit.title}</span>
+            <span>${audit.time}</span>
+          </div>
+          <p>${audit.detail}</p>
+        </div>
+      `).join("");
+    }
+
+    /**
+     * 渲染用户表格主体，包括用户资料、状态标签和行级操作按钮。
+     *
+     * @returns {void}
+     */
+    function renderUserTable() {
+      const filteredUsers = getFilteredUsers();
+      const { rows, totalPages } = getPagedUsers(filteredUsers);
+
+      resultSummary.textContent = `共 ${filteredUsers.length} 位用户`;
+      pageInfo.textContent = `第 ${pageState.page} / ${totalPages} 页`;
+      prevPageButton.disabled = pageState.page <= 1;
+      nextPageButton.disabled = pageState.page >= totalPages;
+      emptyState.style.display = filteredUsers.length ? "none" : "block";
+
+      tableBody.innerHTML = rows.map((user) => {
+        const status = statusMap[user.status];
+        return `
+          <tr>
+            <td>
+              <div class="user-cell">
+                <span class="avatar">${getAvatarText(user.name)}</span>
+                <div>
+                  <div class="user-name">${user.name}</div>
+                  <div class="user-email">${user.email} · ${user.phone}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="tag">${user.role}</span></td>
+            <td>${user.department}</td>
+            <td><span class="status ${status.className}">${status.text}</span></td>
+            <td>${user.lastLogin}</td>
+            <td>
+              <div class="row-actions">
+                <button class="icon-btn" type="button" data-action="edit" data-id="${user.id}" aria-label="编辑${user.name}">✎</button>
+                <button class="icon-btn" type="button" data-action="toggle" data-id="${user.id}" aria-label="切换${user.name}状态">↻</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    /**
+     * 统一刷新页面中会随用户数据变化而变化的区域。
+     *
+     * @returns {void}
+     */
+    function renderPage() {
+      renderStats();
+      renderRoleDistribution();
+      renderUserTable();
+    }
+
+    /**
+     * 展示顶部提示信息，用于反馈新增、编辑、导出等交互结果。
+     *
+     * @param {string} message - 需要展示的提示文案。
+     * @returns {void}
+     */
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("is-visible");
+
+      window.setTimeout(() => {
+        toast.classList.remove("is-visible");
+      }, 2400);
+    }
+
+    /**
+     * 打开用户表单弹窗，并根据传入用户决定是新增还是编辑模式。
+     *
+     * @param {object | null} user - 当前编辑的用户对象，新增模式传入 null。
+     * @returns {void}
+     */
+    function openUserModal(user = null) {
+      pageState.editingId = user ? user.id : null;
+      document.querySelector("#modalTitle").textContent = user ? "编辑用户" : "新增用户";
+      document.querySelector("#formName").value = user ? user.name : "";
+      document.querySelector("#formEmail").value = user ? user.email : "";
+      document.querySelector("#formPhone").value = user ? user.phone : "";
+      document.querySelector("#formRole").value = user ? user.role : "运营经理";
+      document.querySelector("#formDepartment").value = user ? user.department : "总部运营";
+      userModal.classList.add("is-open");
+      document.querySelector("#formName").focus();
+    }
+
+    /**
+     * 关闭用户表单弹窗，并清理当前编辑用户 ID。
+     *
+     * @returns {void}
+     */
+    function closeUserModal() {
+      pageState.editingId = null;
+      userModal.classList.remove("is-open");
+      userForm.reset();
+    }
+
+    /**
+     * 从用户表单读取输入值，并组装为用户对象字段。
+     *
+     * @returns {{name: string, email: string, phone: string, role: string, department: string}} 表单中的用户资料。
+     */
+    function getFormPayload() {
+      return {
+        name: document.querySelector("#formName").value.trim(),
+        email: document.querySelector("#formEmail").value.trim(),
+        phone: document.querySelector("#formPhone").value.trim(),
+        role: document.querySelector("#formRole").value,
+        department: document.querySelector("#formDepartment").value
+      };
+    }
+
+    /**
+     * 保存用户表单内容，编辑模式更新原用户，新增模式写入 mock 用户数组。
+     *
+     * @param {SubmitEvent} event - 表单提交事件对象。
+     * @returns {void}
+     */
+    function saveUser(event) {
+      event.preventDefault();
+      const payload = getFormPayload();
+
+      if (!payload.name || !payload.email || !payload.phone) {
+        showToast("请完整填写姓名、邮箱和手机号。");
+        return;
+      }
+
+      if (pageState.editingId) {
+        const user = users.find((item) => item.id === pageState.editingId);
+        Object.assign(user, payload);
+        showToast("用户资料已更新。");
+      } else {
+        users.unshift({
+          id: Date.now(),
+          ...payload,
+          status: "active",
+          lastLogin: "尚未登录"
+        });
+        pageState.page = 1;
+        showToast("新用户已添加。");
+      }
+
+      closeUserModal();
+      renderPage();
+    }
+
+    /**
+     * 按启用、锁定、停用顺序循环切换用户状态，用于模拟账号治理操作。
+     *
+     * @param {number} userId - 需要切换状态的用户 ID。
+     * @returns {void}
+     */
+    function toggleUserStatus(userId) {
+      const user = users.find((item) => item.id === userId);
+      const statusFlow = ["active", "locked", "disabled"];
+      const currentIndex = statusFlow.indexOf(user.status);
+      user.status = statusFlow[(currentIndex + 1) % statusFlow.length];
+      showToast(`${user.name} 状态已切换为${statusMap[user.status].text}。`);
+      renderPage();
+    }
+
+    /**
+     * 处理表格中的行级按钮点击，通过 data-action 区分编辑和状态切换。
+     *
+     * @param {MouseEvent} event - 表格主体点击事件对象。
+     * @returns {void}
+     */
+    function handleTableAction(event) {
+      const button = event.target.closest("button[data-action]");
+
+      if (!button) {
+        return;
+      }
+
+      const userId = Number(button.dataset.id);
+      const user = users.find((item) => item.id === userId);
+
+      if (button.dataset.action === "edit") {
+        openUserModal(user);
+        return;
+      }
+
+      toggleUserStatus(userId);
+    }
+
+    /**
+     * 重置全部筛选条件，并回到第一页重新渲染用户列表。
+     *
+     * @returns {void}
+     */
+    function resetFilters() {
+      keywordInput.value = "";
+      roleFilter.value = "all";
+      statusFilter.value = "all";
+      departmentFilter.value = "all";
+      pageState.page = 1;
+      renderUserTable();
+    }
+
+    /**
+     * 切换分页页码，并在页码合法时刷新表格。
+     *
+     * @param {number} direction - 翻页方向，-1 表示上一页，1 表示下一页。
+     * @returns {void}
+     */
+    function changePage(direction) {
+      const totalPages = Math.max(Math.ceil(getFilteredUsers().length / pageState.pageSize), 1);
+      const nextPage = pageState.page + direction;
+
+      if (nextPage < 1 || nextPage > totalPages) {
+        return;
+      }
+
+      pageState.page = nextPage;
+      renderUserTable();
+    }
+
+    /**
+     * 注册页面交互事件，包括筛选、分页、弹窗和 mock 导出动作。
+     *
+     * @returns {void}
+     */
+    function bindEvents() {
+      [keywordInput, roleFilter, statusFilter, departmentFilter].forEach((element) => {
+        element.addEventListener("input", () => {
+          pageState.page = 1;
+          renderUserTable();
+        });
+      });
+
+      document.querySelector("#resetButton").addEventListener("click", resetFilters);
+      document.querySelector("#createButton").addEventListener("click", () => openUserModal());
+      document.querySelector("#exportButton").addEventListener("click", () => showToast("当前视图已模拟导出。"));
+      document.querySelector("#closeModalButton").addEventListener("click", closeUserModal);
+      document.querySelector("#cancelModalButton").addEventListener("click", closeUserModal);
+      prevPageButton.addEventListener("click", () => changePage(-1));
+      nextPageButton.addEventListener("click", () => changePage(1));
+      tableBody.addEventListener("click", handleTableAction);
+      userForm.addEventListener("submit", saveUser);
+      userModal.addEventListener("click", (event) => {
+        if (event.target === userModal) {
+          closeUserModal();
+        }
+      });
+    }
+
+    /**
+     * 初始化用户管理页面，渲染静态数据并绑定所有前端交互。
+     *
+     * @returns {void}
+     */
+    function initUserManagementPage() {
+      renderAuditLogs();
+      renderPage();
+      bindEvents();
+    }
+
+    initUserManagementPage();
+  </script>
+</body>
+</html>
