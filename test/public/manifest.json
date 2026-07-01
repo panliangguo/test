@@ -1,0 +1,9 @@
+{
+  "short_name": "后台管理系统",
+  "name": "React Admin 后台管理系统",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
